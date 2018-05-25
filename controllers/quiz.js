@@ -153,3 +153,69 @@ exports.check = (req, res, next) => {
         answer
     });
 };
+
+
+// GET /quizzes/randomplay 
+exports.randomplay = (req, res, next) => {
+
+    Sequelize.Promise.resolve()
+    .then(() => {
+        const opciones = {'id': {[Sequelize.Op.notIn]: req.session.resolved}};
+        return models.quiz.count({where: opciones})
+        .then(count => {
+            var score = req.session.resolved;
+            if (count == 0){
+                delete req.session.resolved;
+                res.render('quizzes/random_nomore',{score});
+        }
+        let atLeast = Math.floor(Math.random() * count);
+        return models.quiz.findAll({
+            where: opciones,
+            offset:atLeast,
+            limit:1
+        })
+        .then(quizzes => {
+            return quizzes [0];
+        });
+    })
+    .catch(error => {
+        req.flash('error', `No se ha borrado el quiz: ${error.message}`);
+        next(error);
+    });
+    })
+    .then(quiz => {
+        console.log(`QUIZ: ${quiz}`);
+        var score = req.session.resolved.length;
+        res.render('quizzes/random_play',{quiz, score});
+    });
+};
+
+
+// GET /quizzes/randomcheck 
+exports.randomcheck = (req, res, next) => {
+    req.session.resolved = req.session.resolved || [];
+    const answer = req.query.answer;
+    const result = answer.toLowerCase().trim() === req.quiz.answer.toLowerCase().trim();
+    var score = req.session.resolved.length;
+    console.log(score);
+    if (result) {
+        if (req.session.resolved.indexOf(req.quiz.id) === -1) {
+            req.session.resolved.push(req.quiz.id);
+            score = req.session.resolved.length;
+        }
+        models.quiz.count()
+        .then(count => {
+            if (score > count) {
+                delete req.session.resolved;
+                res.render('quizzes/random_result', {result, score, answer});
+            } else {
+                res.render('quizzes/random_result', {result, score, answer});
+            }
+        });
+    } else {
+        var score = req.session.resolved.length;
+        delete req.session.resolved;
+        res.render('quizzes/random_result', {result, score, answer});
+    }
+};
+
