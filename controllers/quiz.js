@@ -157,65 +157,73 @@ exports.check = (req, res, next) => {
 
 // GET /quizzes/randomplay 
 exports.randomplay = (req, res, next) => {
-    req.session.randomplay= req.session.randomplay || [];
-    Sequelize.Promise.resolve()
-    .then(() => {
-        const opciones = {'id': {[Sequelize.Op.notIn]: req.session.resolved}};
-        return models.quiz.count({where: opciones})
-        .then(count => {
-            var score = req.session.resolved;
-            if (count == 0){
-                delete req.session.resolved;
-                res.render('quizzes/random_nomore',{score});
-        }
-        let atLeast = Math.floor(Math.random() * count);
-        return models.quiz.findAll({
-            where: opciones,
-            offset:atLeast,
-            limit:1
+    req.session.randomplay = req.session.randomplay || [];
+    models.quiz.findAll()
+        .then(quizzes => { ////Guardo todos los quizzes de mi base de datos
+            req.session.quizzes = quizzes; //NO ESTOY SEGURA DE SI ESTO SE PUEDE HACER
         })
-        .then(quizzes => {
-            return quizzes [0];
-        });
-    })
-    .catch(error => {
-        req.flash('error', `No se ha borrado el quiz: ${error.message}`);
-        next(error);
-    });
-    })
-    .then(quiz => {
-        console.log(`QUIZ: ${quiz}`);
-        var score = req.session.resolved.length;
-        res.render('quizzes/random_play',{quiz, score});
-    });
+        .then( () => {
+            if (req.session.quizzes.length === req.session.randomplay.length) {
+                const score = req.session.randomplay.length; //la puntuacion sera las preguntas acertadas
+                req.session.randomplay = []; //como hemos preguntado todas , reseteamos
+                res.render('quizzes/random_none', {
+                    score
+                });
+            }
+            //si no es asi devolvemos una pregunta
+            let pos = Math.floor(Math.random() * req.session.quizzes.length); //Para acceder a una posicion random
+            quiz = req.session.quizzes[pos];
+            //Como esa es la pregunta que voy a hacer, la elimino
+            req.session.quizzes.splice(req.session.quizzes[pos], 1);
+            return quiz;
+        })
+        .then(quiz => {
+            //Finalmente devuelvo el quiz y la puntuacion actual
+            const score = req.session.randomplay.length;
+            res.render('quizzes/random_play', {
+                quiz,
+                score
+            })
+        })
+        .catch(error => next(error));
+
+
 };
 
 
 // GET /quizzes/randomcheck 
 exports.randomcheck = (req, res, next) => {
-    req.session.resolved = req.session.resolved || [];
-    const answer = req.query.answer;
-    const result = answer.toLowerCase().trim() === req.quiz.answer.toLowerCase().trim();
-    var score = req.session.resolved.length;
-    console.log(score);
-    if (result) {
-        if (req.session.resolved.indexOf(req.quiz.id) === -1) {
-            req.session.resolved.push(req.quiz.id);
-            score = req.session.resolved.length;
-        }
-        models.quiz.count()
-        .then(count => {
-            if (score > count) {
-                delete req.session.resolved;
-                res.render('quizzes/random_result', {result, score, answer});
-            } else {
-                res.render('quizzes/random_result', {result, score, answer});
-            }
-        });
-    } else {
-        var score = req.session.resolved.length;
-        delete req.session.resolved;
-        res.render('quizzes/random_result', {result, score, answer});
+    //Este metodo se utiliza para comprobar el otro
+
+    const {quiz, query} = req;
+    const answer = query.answer || "";
+    const result = answer.toLowerCase().trim() === quiz.answer.toLowerCase().trim();
+    const score = req.session.randomplay.length + result; //Devuelvo el numero de respuestas acertadas
+    if(result===1){ //Si he acertado la respuesta
+       // score++;
+        req.session.randomplay.push(quiz.id); //La añado al array de respuestas acertadas
+    } else { //Si fallamos hay que resetear el array de respuestas acertadas
+        req.session.randomplay=[];
     }
+
+    res.render('quizzes/random_result', { //para que pase a otra pag web
+        answer,
+        result,
+        score
+    });
+}
+
+// GET /quizzes/:quizId/check
+exports.check = (req, res, next) => {
+
+    const {quiz, query} = req;
+    const answer = query.answer || "";
+    const result = answer.toLowerCase().trim() === quiz.answer.toLowerCase().trim();
+
+    res.render('quizzes/result', { //para que pase a otra pag web
+        quiz,
+        result,
+        answer
+    });
 };
 
