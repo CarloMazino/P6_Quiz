@@ -157,7 +157,7 @@ exports.check = (req, res, next) => {
 
 // GET /quizzes/randomplay 
 exports.randomplay = (req, res, next) => {
-
+    req.session.randomplay= req.session.randomplay || [];
     Sequelize.Promise.resolve()
     .then(() => {
         const opciones = {'id': {[Sequelize.Op.notIn]: req.session.resolved}};
