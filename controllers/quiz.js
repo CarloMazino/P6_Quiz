@@ -212,18 +212,3 @@ exports.randomcheck = (req, res, next) => {
         score
     });
 }
-
-// GET /quizzes/:quizId/check
-exports.check = (req, res, next) => {
-
-    const {quiz, query} = req;
-    const answer = query.answer || "";
-    const result = answer.toLowerCase().trim() === quiz.answer.toLowerCase().trim();
-
-    res.render('quizzes/result', { //para que pase a otra pag web
-        quiz,
-        result,
-        answer
-    });
-};
-
