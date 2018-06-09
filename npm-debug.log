@@ -1,0 +1,40 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/local/bin/node',
+1 verbose cli   '/usr/local/bin/npm',
+1 verbose cli   'run-script',
+1 verbose cli   'migrate_heroku' ]
+2 info using npm@2.14.4
+3 info using node@v4.1.1
+4 verbose run-script [ 'premigrate_heroku', 'migrate_heroku', 'postmigrate_heroku' ]
+5 info premigrate_heroku quiz-2018@0.0.0
+6 info migrate_heroku quiz-2018@0.0.0
+7 verbose unsafe-perm in lifecycle true
+8 info quiz-2018@0.0.0 Failed to exec migrate_heroku script
+9 verbose stack Error: quiz-2018@0.0.0 migrate_heroku: `heroku run ./node_modules/.bin/sequelize db:migrate --url \$DATABASE_URL`
+9 verbose stack spawn ENOENT
+9 verbose stack     at ChildProcess.<anonymous> (/usr/local/lib/node_modules/npm/lib/utils/spawn.js:17:16)
+9 verbose stack     at emitTwo (events.js:87:13)
+9 verbose stack     at ChildProcess.emit (events.js:172:7)
+9 verbose stack     at maybeClose (internal/child_process.js:817:16)
+9 verbose stack     at Process.ChildProcess._handle.onexit (internal/child_process.js:211:5)
+10 verbose pkgid quiz-2018@0.0.0
+11 verbose cwd /Users/carloscaroalvarez/misgits/core_practica7/quiz_2018
+12 error Darwin 17.5.0
+13 error argv "/usr/local/bin/node" "/usr/local/bin/npm" "run-script" "migrate_heroku"
+14 error node v4.1.1
+15 error npm  v2.14.4
+16 error file sh
+17 error code ELIFECYCLE
+18 error errno ENOENT
+19 error syscall spawn
+20 error quiz-2018@0.0.0 migrate_heroku: `heroku run ./node_modules/.bin/sequelize db:migrate --url \$DATABASE_URL`
+20 error spawn ENOENT
+21 error Failed at the quiz-2018@0.0.0 migrate_heroku script 'heroku run ./node_modules/.bin/sequelize db:migrate --url \$DATABASE_URL'.
+21 error This is most likely a problem with the quiz-2018 package,
+21 error not with npm itself.
+21 error Tell the author that this fails on your system:
+21 error     heroku run ./node_modules/.bin/sequelize db:migrate --url \$DATABASE_URL
+21 error You can get their info via:
+21 error     npm owner ls quiz-2018
+21 error There is likely additional logging output above.
+22 verbose exit [ 1, true ]

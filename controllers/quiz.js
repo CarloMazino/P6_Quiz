@@ -226,3 +226,62 @@ exports.check = (req, res, next) => {
         answer
     });
 };
+
+
+// GET /quizzes/randomplay 
+exports.randomplay = (req, res, next) => {
+    req.session.randomplay = req.session.randomplay || [];
+    models.quiz.findAll()
+        .then(quizzes => { ////Guardo todos los quizzes de mi base de datos
+            req.session.quizzes = quizzes; //NO ESTOY SEGURA DE SI ESTO SE PUEDE HACER
+        })
+        .then( () => {
+            if (req.session.quizzes.length === req.session.randomplay.length) {
+                const score = req.session.randomplay.length; //la puntuacion sera las preguntas acertadas
+                req.session.randomplay = []; //como hemos preguntado todas , reseteamos
+                res.render('quizzes/random_none', {
+                    score
+                });
+            }
+            //si no es asi devolvemos una pregunta
+            let pos = Math.floor(Math.random() * req.session.quizzes.length); //Para acceder a una posicion random
+            quiz = req.session.quizzes[pos];
+            //Como esa es la pregunta que voy a hacer, la elimino
+            req.session.quizzes.splice(req.session.quizzes[pos], 1);
+            return quiz;
+        })
+        .then(quiz => {
+            //Finalmente devuelvo el quiz y la puntuacion actual
+            const score = req.session.randomplay.length;
+            res.render('quizzes/random_play', {
+                quiz,
+                score
+            })
+        })
+        .catch(error => next(error));
+
+
+};
+
+
+// GET /quizzes/randomcheck 
+exports.randomcheck = (req, res, next) => {
+    //Este metodo se utiliza para comprobar el otro
+
+    const {quiz, query} = req;
+    const answer = query.answer || "";
+    const result = answer.toLowerCase().trim() === quiz.answer.toLowerCase().trim();
+    const score = req.session.randomplay.length + result; //Devuelvo el numero de respuestas acertadas
+    if(result===1){ //Si he acertado la respuesta
+       // score++;
+        req.session.randomplay.push(quiz.id); //La añado al array de respuestas acertadas
+    } else { //Si fallamos hay que resetear el array de respuestas acertadas
+        req.session.randomplay=[];
+    }
+
+    res.render('quizzes/random_result', { //para que pase a otra pag web
+        answer,
+        result,
+        score
+    });
+}
