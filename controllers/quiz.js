@@ -268,15 +268,34 @@ exports.randomplay = (req, res, next) => {
 exports.randomcheck = (req, res, next) => {
     //Este metodo se utiliza para comprobar el otro
 
+    req.session.randomplay= req.session.randomplay || [];
+
     const {quiz, query} = req;
     const answer = query.answer || "";
     const result = answer.toLowerCase().trim() === quiz.answer.toLowerCase().trim();
-    const score = req.session.randomplay.length + result; //Devuelvo el numero de respuestas acertadas
-    if(result===1){ //Si he acertado la respuesta
+    let score = req.session.randomplay.length + result; //Devuelvo el numero de respuestas acertadas
+    if(result){ //Si he acertado la respuesta
+
+        if (req.session.randomplay.indexOf(req.quiz.id) === -1) {
+            req.session.randomplay.push(req.quiz.id);
+            score = req.session.randomplay.length;
+        }
        // score++;
+        models.quiz.count()
+            .then(count => {
+                if (score > count) {
+                    delete req.session.randomplay;
+                    res.render('quizzes/random_result', {result, score, answer});
+                } else {
+                    res.render('quizzes/random_result', {result, score, answer});
+                }
+            });
+
         req.session.randomplay.push(quiz.id); //La añado al array de respuestas acertadas
     } else { //Si fallamos hay que resetear el array de respuestas acertadas
-        req.session.randomplay=[];
+        let score = req.session.randomplay;
+        delete req.session.resolved;
+        res.render('quizzes/random_result', {result, score, answer});
     }
 
     res.render('quizzes/random_result', { //para que pase a otra pag web
