@@ -6,22 +6,11 @@ const paginate = require('../helpers/paginate').paginate;
 
 // Autoload the quiz with id equals to :quizId
 exports.load = (req, res, next, quizId) => {
+    const options = [
+        {model: models.tip, include: [{model: models.user, as: 'author'}]},
+        {model: models.user, as: 'author'}];
 
-    models.quiz.findById(quizId, {
-        include: [
-            {
-                model: models.tip,
-                include: [
-                    {
-                        model: models.user,
-                        as: 'author'
-                    }]
-            },
-            {
-                model: models.user,
-                as: 'author'
-            }
-        ]
+    models.quiz.findById(quizId, {include: options
     })
     .then(quiz => {
         if (quiz) {
